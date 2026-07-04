@@ -1,0 +1,55 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build
+target/
+build/
+*.class
+*.jar
+*.war
+
+# Maven
+.m2/
+mvn/
+
+# Gradle
+.gradle/
+gradle/
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project
+*.iml
+.classpath
+.project
+.settings/
+
+# Database
+*.db
+*.sql.bak
+
+# Local Maven
+.maven/
+

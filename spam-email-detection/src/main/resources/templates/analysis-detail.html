@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Detail - PhishNet AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7fa;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .detail-container {
+            margin: 40px auto;
+            max-width: 900px;
+        }
+        .result-spam {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-safe {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .result-score {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .detail-row {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+            width: 150px;
+        }
+        .detail-value {
+            color: #666;
+        }
+        .btn-action {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .btn-action:hover {
+            opacity: 0.9;
+            color: white;
+        }
+        .keywords-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .keyword-tag {
+            background: #fff3cd;
+            color: #856404;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .content-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">🎣 PhishNet AI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analyze">Analyze Email</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/feedback">Submit Feedback</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="detail-container">
+        <h1 class="mb-4">🔍 Analysis Result</h1>
+
+        <!-- Result Card -->
+        <div th:if="${analysis.result == 'SPAM'}" class="result-spam">
+            <div class="result-title">⚠️ SPAM DETECTED</div>
+            <div class="result-score" th:text="|${#numbers.formatDecimal(analysis.spamScore, 1, 2)}%|">75%</div>
+            <p class="mt-2">This email is likely spam or junk advertisement</p>
+        </div>
+
+        <div th:if="${analysis.result == 'PHISHING'}" class="result-spam" style="background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);">
+            <div class="result-title">🚨 PHISHING DETECTED</div>
+            <div class="result-score" th:text="|${#numbers.formatDecimal(analysis.spamScore, 1, 2)}%|">85%</div>
+            <p class="mt-2">This email is classified as a social engineering/phishing attempt</p>
+        </div>
+
+        <div th:if="${analysis.result == 'NOT_SPAM'}" class="result-safe">
+            <div class="result-title">✓ SAFE EMAIL</div>
+            <div class="result-score" th:text="|${#numbers.formatDecimal(analysis.spamScore, 1, 2)}%|">25%</div>
+            <p class="mt-2">This email appears to be legitimate</p>
+        </div>
+
+        <div th:if="${analysis.result == 'INVALID'}" class="result-safe" style="background: linear-gradient(135deg, #7f8c8d 0%, #34495e 100%);">
+            <div class="result-title">❌ INVALID FORMAT</div>
+            <div class="result-score">N/A</div>
+            <p class="mt-2">The analyzed content does not represent a valid email message.</p>
+        </div>
+
+        <!-- Detail Card -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">📝 Email Details</h5>
+
+                <div class="detail-row">
+                    <div class="detail-label">Subject:</div>
+                    <div class="detail-value" th:text="${analysis.subject}">Email Subject</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Analysis Date:</div>
+                    <div class="detail-value" th:text="${#temporals.format(analysis.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Spam Score:</div>
+                    <div class="detail-value" th:text="${analysis.result == 'INVALID' ? 'N/A' : #numbers.formatDecimal(analysis.spamScore, 1, 2) + '%'}">75%</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Classification:</div>
+                    <div class="detail-value">
+                        <span th:if="${analysis.result == 'SPAM'}" class="badge bg-danger text-white">SPAM</span>
+                        <span th:if="${analysis.result == 'PHISHING'}" class="badge bg-warning text-dark">PHISHING</span>
+                        <span th:if="${analysis.result == 'NOT_SPAM'}" class="badge bg-success text-white">SAFE</span>
+                        <span th:if="${analysis.result == 'INVALID'}" class="badge bg-secondary text-white">INVALID</span>
+                    </div>
+                </div>
+
+                <div class="detail-row" th:if="${!#strings.isEmpty(analysis.keywordsDetected)}">
+                    <div class="detail-label">Analysis Indicators:</div>
+                    <div class="keywords-list">
+                        <span th:each="keyword : ${#strings.listSplit(analysis.keywordsDetected, ',')}" 
+                              th:class="${#strings.trim(keyword).startsWith('AI') ? 'keyword-tag badge bg-primary text-white border-0' : 
+                                         #strings.trim(keyword).startsWith('Fallback') ? 'keyword-tag badge bg-warning text-dark border-0' : 'keyword-tag'}" 
+                              th:text="${#strings.trim(keyword)}">keyword</span>
+                    </div>
+                </div>
+
+                <!-- Email Content Section -->
+                <div class="content-section">
+                    <h6 class="mb-3">📧 Email Content:</h6>
+                    <p style="white-space: pre-wrap; word-wrap: break-word;" th:text="${analysis.content}">
+                        Email content goes here...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4">
+            <a th:href="@{/report/pdf/{id}(id=${analysis.id})}" class="btn btn-action">📄 Download PDF Report</a>
+            <a href="/analyze" class="btn btn-action">➕ Analyze Another Email</a>
+            <a href="/history" class="btn btn-action">📋 Back to History</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Threat Analytics')}">
+    <title>Threat Analytics</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'analytics', 'Threat Analytics')}">
+        <div th:fragment="content">
+            <!-- Row of widgets -->
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">Total Processed</div>
+                        <div class="fs-2 font-weight-bold mt-1 text-info" th:text="${totalCount}">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">Spam Category</div>
+                        <div class="fs-2 font-weight-bold mt-1 text-danger" th:text="${spamCount}">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">Phishing Category</div>
+                        <div class="fs-2 font-weight-bold mt-1 text-warning" th:text="${phishingCount}">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">Detection Accuracy</div>
+                        <div class="fs-2 font-weight-bold mt-1 text-success" th:text="|${accuracy}%|">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="cyber-card p-4">
+                        <h5 class="mb-4 text-info"><i class="bi bi-tag-fill me-2"></i>Most Common Attack Keywords</h5>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="keywordsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cyber-card p-4">
+                        <h5 class="mb-4 text-info"><i class="bi bi-bank2 me-2"></i>Most Impersonated Brands</h5>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="brandsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat Vectors Summary Card -->
+            <div class="cyber-card p-4">
+                <h5 class="mb-4 text-info"><i class="bi bi-shield-slash-fill me-2"></i>Cyber Threat Intelligence Metrics</h5>
+                <p class="text-muted">Analysis of keywords, headers, and social engineering templates highlights the following attack patterns:
+                Phishing campaigns are mostly impersonating financial and IT SaaS providers (like Amazon and PayPal) with keywords targeting credentials. Spam campaigns focus heavily on crypto schemes and remote employment advertisements.</p>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-dark border-start border-danger border-3">
+                            <span class="text-danger small font-weight-bold d-block">Spam Vector Focus</span>
+                            <span class="d-block mt-2">Cryptocurrency deals, online pharmaceutical offers, work-from-home typing ads.</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-dark border-start border-warning border-3">
+                            <span class="text-warning small font-weight-bold d-block">Phishing Vector Focus</span>
+                            <span class="d-block mt-2">Direct deposit accounts updates, tax returns, expired accounts alerts, suspicious login alerts.</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-dark border-start border-success border-3">
+                            <span class="text-success small font-weight-bold d-block">Remediation Guidelines</span>
+                            <span class="d-block mt-2">Activate SPF/DKIM validation rules, block suspicious external URLs, train employees on brand headers checks.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts logic -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script th:inline="javascript">
+                /*[[th:inline]]*/
+                const keywordLabels = /*[[${keywordLabels}]]*/ [];
+                const keywordData = /*[[${keywordData}]]*/ [];
+
+                const brandLabels = /*[[${brandLabels}]]*/ [];
+                const brandData = /*[[${brandData}]]*/ [];
+
+                // Keywords Horizontal Bar Chart
+                const kwCtx = document.getElementById('keywordsChart').getContext('2d');
+                new Chart(kwCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: keywordLabels,
+                        datasets: [{
+                            label: 'Frequency',
+                            data: keywordData,
+                            backgroundColor: '#00bcd4',
+                            borderColor: '#0097a7',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8892b0', precision: 0 }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: '#8892b0' }
+                            }
+                        }
+                    }
+                });
+
+                // Brands Vertical Bar Chart
+                const brandCtx = document.getElementById('brandsChart').getContext('2d');
+                new Chart(brandCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: brandLabels,
+                        datasets: [{
+                            label: 'Attacks Observed',
+                            data: brandData,
+                            backgroundColor: '#ffb74d',
+                            borderColor: '#f57c00',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8892b0' }
+                            },
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8892b0', precision: 0 }
+                            }
+                        }
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</body>
+</html>

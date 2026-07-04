@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Feedback Management')}">
+    <title>Feedback Management</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'feedback', 'Feedback Management')}">
+        <div th:fragment="content">
+            <!-- Alert banners -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Feedback Table Card -->
+            <div class="cyber-card p-4">
+                <h5 class="mb-4 text-info"><i class="bi bi-chat-left-text-fill me-2"></i>Analyst & User Feedback Cases</h5>
+                <div class="table-responsive">
+                    <table class="table cyber-table m-0">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Sender</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th>Date Submitted</th>
+                                <th>Case Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="feedback : ${feedbacks}">
+                                <td th:text="${feedback.id}">1</td>
+                                <td th:text="${feedback.name != null ? feedback.name : 'Anonymous'}">Username</td>
+                                <td th:text="${feedback.email}">user@example.com</td>
+                                <td th:text="${feedback.subject}" class="font-weight-bold text-info">Subject</td>
+                                <td>
+                                    <span class="d-inline-block text-truncate" style="max-width: 250px;" th:text="${feedback.message}" th:title="${feedback.message}">Full message body here...</span>
+                                </td>
+                                <td th:text="${#temporals.format(feedback.createdAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${feedback.resolved ? 'badge-threat-low' : 'badge-threat-high'}">
+                                        <i class="bi" th:classappend="${feedback.resolved ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}"></i>
+                                        <span th:text="${feedback.resolved ? 'Resolved' : 'Pending'}">PENDING</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <!-- View Dialog Trigger -->
+                                        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" th:data-bs-target="'#feedModal-' + ${feedback.id}"><i class="bi bi-eye"></i> Read</button>
+                                        <!-- Mark Resolved -->
+                                        <form method="post" th:action="@{/admin/feedback/resolve/{id}(id=${feedback.id})}" th:if="${!feedback.resolved}">
+                                            <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-lg"></i> Resolve</button>
+                                        </form>
+                                        <!-- Delete -->
+                                        <form method="post" th:action="@{/admin/feedback/delete/{id}(id=${feedback.id})}" onsubmit="return confirm('Permanently remove this feedback case record?');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Read Feedback Modal -->
+                                    <div class="modal fade" th:id="'feedModal-' + ${feedback.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                                                <div class="modal-header border-light">
+                                                    <h5 class="modal-title text-info"><i class="bi bi-chat-right-text-fill me-2"></i>Feedback Case Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3 p-3 bg-light rounded">
+                                                        <div class="text-muted small">Sender Details:</div>
+                                                        <div class="font-weight-bold" th:text="${feedback.name != null ? feedback.name : 'Anonymous'} + ' (' + ${feedback.email} + ')'">Sender</div>
+                                                    </div>
+                                                    <div class="mb-3 p-3 bg-light rounded">
+                                                        <div class="text-muted small">Subject:</div>
+                                                        <div class="font-weight-bold text-info" th:text="${feedback.subject}">Subject line</div>
+                                                    </div>
+                                                    <div class="mb-3 p-3 bg-light rounded">
+                                                        <div class="text-muted small">Message:</div>
+                                                        <div style="white-space: pre-wrap;" th:text="${feedback.message}">Message content</div>
+                                                    </div>
+                                                    <div class="text-muted small text-end" th:text="'Date: ' + ${#temporals.format(feedback.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Timestamp</div>
+                                                </div>
+                                                <div class="modal-footer border-secondary">
+                                                    <form method="post" th:action="@{/admin/feedback/resolve/{id}(id=${feedback.id})}" th:if="${!feedback.resolved}" class="m-0">
+                                                        <button type="submit" class="cyber-btn"><i class="bi bi-check-lg me-2"></i>Mark as Resolved</button>
+                                                    </form>
+                                                    <button type="button" class="cyber-btn cyber-btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(feedbacks)}">
+                                <td colspan="8" class="text-center text-muted py-4">No user feedbacks registered in the console files.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

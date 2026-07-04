@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Security Alerts')}">
+    <title>Console Alerts</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'notifications', 'Security Alerts')}">
+        <div th:fragment="content">
+            <!-- Alert banners -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Header actions -->
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                <h4 class="text-info m-0"><i class="bi bi-bell-fill me-2"></i>Alarm Event Logs</h4>
+                <div class="d-flex gap-2">
+                    <form method="post" action="/admin/notifications/read-all" class="m-0">
+                        <button type="submit" class="cyber-btn cyber-btn-secondary"><i class="bi bi-eye-fill me-2"></i>Acknowledge All</button>
+                    </form>
+                    <form method="post" action="/admin/notifications/clear-all" class="m-0" onsubmit="return confirm('WARNING: Are you sure you want to delete all alert records from the database log?');">
+                        <button type="submit" class="cyber-btn cyber-btn-danger"><i class="bi bi-trash-fill me-2"></i>Clear Alert History</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notifications Feed List -->
+            <div class="row g-3">
+                <div class="col-12" th:each="n : ${notifications}">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                         th:style="${n.read ? 'opacity: 0.65; border-left: 4px solid #233554;' : 
+                                   n.type == 'FAILED_AI' || n.type == 'DB_FAILURE' ? 'border-left: 4px solid #ff5252; box-shadow: 0 0 10px rgba(255, 82, 82, 0.1);' : 
+                                   n.type == 'SUSPICIOUS_LOGIN' ? 'border-left: 4px solid #ffb74d;' : 'border-left: 4px solid #00bcd4;'}">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fs-4" th:classappend="${n.type == 'FAILED_AI' || n.type == 'DB_FAILURE' ? 'text-danger' : n.type == 'SUSPICIOUS_LOGIN' ? 'text-warning' : 'text-info'}">
+                                <i class="bi" th:classappend="${n.type == 'FAILED_AI' || n.type == 'DB_FAILURE' ? 'bi-exclamation-triangle-fill' : n.type == 'SUSPICIOUS_LOGIN' ? 'bi-shield-fill-x' : 'bi-info-circle-fill'}"></i>
+                            </span>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small font-weight-bold text-uppercase" th:classappend="${n.type == 'FAILED_AI' || n.type == 'DB_FAILURE' ? 'text-danger' : n.type == 'SUSPICIOUS_LOGIN' ? 'text-warning' : 'text-info'}" th:text="${n.type}">TYPE</span>
+                                    <span th:if="${!n.read}" class="badge bg-danger rounded-pill px-2 py-1" style="font-size: 0.65rem;">NEW</span>
+                                </div>
+                                <div class="mt-1" th:text="${n.message}">Notification detailed message goes here</div>
+                                <div class="text-muted small mt-1 font-monospace" th:text="${#temporals.format(n.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Timestamp</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <form method="post" th:action="@{/admin/notifications/read/{id}(id=${n.id})}" th:if="${!n.read}" class="m-0">
+                                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-lg"></i> Acknowledge</button>
+                            </form>
+                            <form method="post" th:action="@{/admin/notifications/delete/{id}(id=${n.id})}" class="m-0">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Clear</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div class="col-12" th:if="${#lists.isEmpty(notifications)}">
+                    <div class="cyber-card p-5 text-center text-muted">
+                        <i class="bi bi-shield-check-fill fs-1 text-success mb-3 d-block"></i>
+                        <h5>No active alarms in log.</h5>
+                        <p class="m-0 small">The threat pipeline is clean and operational.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

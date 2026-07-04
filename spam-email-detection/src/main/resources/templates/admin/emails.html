@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Email Threat Logs')}">
+    <title>Email Threat Logs</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'emails', 'Email Threat Logs')}">
+        <div th:fragment="content">
+            <!-- Filter Panel -->
+            <div class="cyber-card p-4 mb-4">
+                <form method="get" action="/admin/emails" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small font-weight-bold">Search Subject/Content</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" th:value="${search}" class="form-control cyber-input" placeholder="Search text...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small font-weight-bold">Filter Threat Classification</label>
+                        <select name="result" class="form-select cyber-select">
+                            <option value="">All Categories</option>
+                            <option value="NOT_SPAM" th:selected="${selectedResult == 'NOT_SPAM'}">Legitimate (SAFE)</option>
+                            <option value="SPAM" th:selected="${selectedResult == 'SPAM'}">Spam Advertisement</option>
+                            <option value="PHISHING" th:selected="${selectedResult == 'PHISHING'}">Phishing Social Engineering</option>
+                            <option value="INVALID" th:selected="${selectedResult == 'INVALID'}">Invalid Format (NON-EMAIL)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small font-weight-bold">Filter by Analyst (Username)</label>
+                        <input type="text" name="username" th:value="${selectedUsername}" class="form-control cyber-input" placeholder="Enter username...">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="cyber-btn w-100"><i class="bi bi-funnel-fill me-2"></i>Filter</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Threat Logs Card -->
+            <div class="cyber-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                    <h5 class="text-info m-0"><i class="bi bi-envelope-open-fill me-2"></i>Security Threats Log Pipeline</h5>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/emails/export-csv" class="cyber-btn cyber-btn-secondary"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV</a>
+                        <a href="/admin/emails/export-pdf" class="cyber-btn"><i class="bi bi-file-pdf me-2"></i>Export PDF logs</a>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table cyber-table m-0">
+                        <thead>
+                            <tr>
+                                <th>Log ID</th>
+                                <th>Analyst</th>
+                                <th>Subject</th>
+                                <th>Assessment</th>
+                                <th>Probability</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="analysis : ${analyses}">
+                                <td th:text="${analysis.id}">1001</td>
+                                <td th:text="${analysis.user.username}">john_sec</td>
+                                <td>
+                                    <span class="d-inline-block text-truncate font-weight-bold" style="max-width: 260px;" th:text="${analysis.subject}" th:title="${analysis.subject}">Subject text</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${analysis.result == 'SPAM' ? 'badge-threat-high' : analysis.result == 'PHISHING' ? 'badge-threat-mid' : analysis.result == 'INVALID' ? 'badge-threat-invalid' : 'badge-threat-low'}">
+                                        <i class="bi" th:classappend="${analysis.result == 'SPAM' ? 'bi-trash-fill' : analysis.result == 'PHISHING' ? 'bi-shield-slash-fill' : analysis.result == 'INVALID' ? 'bi-exclamation-triangle-fill' : 'bi-shield-check-fill'}"></i>
+                                        <span th:text="${analysis.result == 'NOT_SPAM' ? 'SAFE' : analysis.result}">SAFE</span>
+                                    </span>
+                                </td>
+                                <td th:text="|${#numbers.formatDecimal(analysis.spamScore, 1, 2)}%|">0.00%</td>
+                                <td th:text="${#temporals.format(analysis.createdAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <!-- Detail Trigger -->
+                                        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" th:data-bs-target="'#detailModal-' + ${analysis.id}"><i class="bi bi-eye-fill"></i> View</button>
+                                        <!-- PDF download -->
+                                        <a th:href="@{/report/pdf/{id}(id=${analysis.id})}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-pdf"></i> Report</a>
+                                    </div>
+
+                                    <!-- Detail Modal Overlay -->
+                                    <div class="modal fade" th:id="'detailModal-' + ${analysis.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                                                <div class="modal-header border-light">
+                                                    <h5 class="modal-title text-info"><i class="bi bi-shield-fill-exclamation me-2"></i>Threat Details: Log #<span th:text="${analysis.id}">1001</span></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row g-3 mb-4">
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 rounded bg-light">
+                                                                <span class="text-muted small">Submitted By:</span>
+                                                                <div class="font-weight-bold" th:text="${analysis.user.username} + ' (' + ${analysis.user.email} + ')'">User</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 rounded bg-light">
+                                                                <span class="text-muted small">Analysis Date:</span>
+                                                                <div class="font-weight-bold" th:text="${#temporals.format(analysis.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Timestamp</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-4">
+                                                        <span class="text-muted small d-block mb-1">Email Subject:</span>
+                                                        <div class="p-3 rounded bg-light font-weight-bold" th:text="${analysis.subject}">Subject</div>
+                                                    </div>
+
+                                                    <div class="row g-3 mb-4">
+                                                        <div class="col-md-6">
+                                                            <span class="text-muted small">Assessment Result:</span>
+                                                            <div class="mt-2">
+                                                                <span class="status-badge fs-6" th:classappend="${analysis.result == 'SPAM' ? 'badge-threat-high' : analysis.result == 'PHISHING' ? 'badge-threat-mid' : analysis.result == 'INVALID' ? 'badge-threat-invalid' : 'badge-threat-low'}">
+                                                                    <i class="bi" th:classappend="${analysis.result == 'SPAM' ? 'bi-trash-fill' : analysis.result == 'PHISHING' ? 'bi-shield-slash-fill' : analysis.result == 'INVALID' ? 'bi-exclamation-triangle-fill' : 'bi-shield-check-fill'}"></i>
+                                                                    <span th:text="${analysis.result == 'NOT_SPAM' ? 'SAFE' : analysis.result}">SAFE</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <span class="text-muted small">Probability Score:</span>
+                                                            <div class="fs-4 font-weight-bold" th:text="|${#numbers.formatDecimal(analysis.spamScore, 1, 2)}%|">0.00%</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-4" th:if="${!#strings.isEmpty(analysis.keywordsDetected)}">
+                                                        <span class="text-muted small d-block mb-2">Threat Flag Indicators:</span>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <span th:each="keyword : ${#strings.listSplit(analysis.keywordsDetected, ',')}" 
+                                                                  class="badge p-2 bg-secondary text-light font-weight-bold" 
+                                                                  th:classappend="${#strings.trim(keyword).startsWith('AI') ? 'bg-primary' : #strings.trim(keyword).startsWith('Fallback') ? 'bg-warning text-dark' : 'bg-dark'}"
+                                                                  th:text="${#strings.trim(keyword)}">Keyword</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <span class="text-muted small d-block mb-1">Raw Email Body:</span>
+                                                        <div class="p-3 rounded bg-light" style="max-height: 250px; overflow-y: auto; white-space: pre-wrap; font-family: monospace;" th:text="${analysis.content}">Body content</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-secondary">
+                                                    <a th:href="@{/report/pdf/{id}(id=${analysis.id})}" class="cyber-btn"><i class="bi bi-file-pdf me-2"></i>Download PDF Report</a>
+                                                    <button type="button" class="cyber-btn cyber-btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(analyses)}">
+                                <td colspan="7" class="text-center text-muted py-4">No email threat records found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

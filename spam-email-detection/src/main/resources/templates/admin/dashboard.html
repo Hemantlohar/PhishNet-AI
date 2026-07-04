@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Admin Dashboard')}">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'dashboard', 'Admin Dashboard')}">
+        <div th:fragment="content">
+            <!-- Alert banner -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Stats Metric Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Total Users</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${totalUsers}">0</div>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-primary"><i class="bi bi-people-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Active Users</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${activeUsers}">0</div>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success"><i class="bi bi-person-check-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Emails Analyzed</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${totalEmails}">0</div>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3 text-info"><i class="bi bi-envelope-check-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Spam Blocked</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${spamEmails}">0</div>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 text-danger"><i class="bi bi-trash-fill fs-3"></i></div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Phishing Attacks</div>
+                            <div class="fs-3 font-weight-bold mt-1 text-warning" th:text="${phishingEmails}">0</div>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 text-warning"><i class="bi bi-shield-slash-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Safe Emails</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${safeEmails}">0</div>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success"><i class="bi bi-shield-check-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">AI Requests</div>
+                            <div class="fs-3 font-weight-bold mt-1" th:text="${aiRequests}">0</div>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-primary"><i class="bi bi-cpu-fill fs-3"></i></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="cyber-card p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small font-weight-bold text-uppercase">Console Status</div>
+                            <div class="fs-3 font-weight-bold mt-1 text-success d-flex align-items-center gap-2">
+                                <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+                                <span th:text="${systemStatus}">ACTIVE</span>
+                            </div>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success"><i class="bi bi-activity fs-3"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="cyber-card p-4">
+                        <h5 class="mb-4 text-info"><i class="bi bi-activity me-2"></i>Threat Log Analysis (Past 7 Days)</h5>
+                        <div style="height: 320px; position: relative;">
+                            <canvas id="threatTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="cyber-card p-4">
+                        <h5 class="mb-4 text-info"><i class="bi bi-pie-chart-fill me-2"></i>Threat Mix</h5>
+                        <div style="height: 320px; position: relative;">
+                            <canvas id="threatMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Security Notifications -->
+            <div class="cyber-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h5 class="text-info m-0"><i class="bi bi-bell-fill me-2"></i>Security Alerts Log</h5>
+                    <a href="/admin/notifications" class="cyber-btn cyber-btn-secondary btn-sm">View All Alerts</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table cyber-table m-0">
+                        <thead>
+                            <tr>
+                                <th>Alarm Type</th>
+                                <th>Alert Message</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="alert : ${recentAlerts}">
+                                <td>
+                                    <span class="status-badge" th:classappend="${alert.type == 'FAILED_AI' || alert.type == 'DB_FAILURE' ? 'badge-threat-high' : alert.type == 'SUSPICIOUS_LOGIN' ? 'badge-threat-mid' : 'badge-threat-low'}">
+                                        <i class="bi" th:classappend="${alert.type == 'FAILED_AI' || alert.type == 'DB_FAILURE' ? 'bi-exclamation-triangle-fill' : alert.type == 'SUSPICIOUS_LOGIN' ? 'bi-lock-fill' : 'bi-info-circle-fill'}"></i>
+                                        <span th:text="${alert.type}">TYPE</span>
+                                    </span>
+                                </td>
+                                <td th:text="${alert.message}">Alert contents here</td>
+                                <td th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">Timestamp</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentAlerts)}">
+                                <td colspan="3" class="text-center text-muted py-4">No recent security alert signals in the pipeline.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chart.js configuration scripts -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script th:inline="javascript">
+                const labels = /*[[${chartLabels}]]*/ [];
+                const spamData = /*[[${chartSpamData}]]*/ [];
+                const phishingData = /*[[${chartPhishingData}]]*/ [];
+                const safeData = /*[[${chartSafeData}]]*/ [];
+
+                const totalSpam = /*[[${spamEmails}]]*/ 0;
+                const totalPhishing = /*[[${phishingEmails}]]*/ 0;
+                const totalSafe = /*[[${safeEmails}]]*/ 0;
+
+                // Line Chart
+                const trendCtx = document.getElementById('threatTrendChart').getContext('2d');
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Spam Blocked',
+                                data: spamData,
+                                borderColor: '#ff5252',
+                                backgroundColor: 'rgba(255, 82, 82, 0.05)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Phishing Attacks',
+                                data: phishingData,
+                                borderColor: '#ffb74d',
+                                backgroundColor: 'rgba(255, 183, 77, 0.05)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Legitimate Emails',
+                                data: safeData,
+                                borderColor: '#69f0ae',
+                                backgroundColor: 'rgba(105, 240, 174, 0.05)',
+                                fill: true,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e0e6ed' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8892b0' }
+                            },
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#8892b0', precision: 0 }
+                            }
+                        }
+                    }
+                });
+
+                // Pie Mix Chart
+                const mixCtx = document.getElementById('threatMixChart').getContext('2d');
+                new Chart(mixCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Spam', 'Phishing', 'Legitimate'],
+                        datasets: [{
+                            data: [totalSpam, totalPhishing, totalSafe],
+                            backgroundColor: ['#ff5252', '#ffb74d', '#69f0ae'],
+                            borderWidth: 2,
+                            borderColor: '#151c2c'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#e0e6ed' }
+                            }
+                        }
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</body>
+</html>

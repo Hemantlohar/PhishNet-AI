@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('System Settings')}">
+    <title>System Settings</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'settings', 'System Settings')}">
+        <div th:fragment="content">
+            <!-- Alert banners -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Settings Form -->
+            <form method="post" action="/admin/settings/save">
+                <!-- System settings -->
+                <div class="cyber-card p-4 mb-4">
+                    <h5 class="mb-4 text-info"><i class="bi bi-gear-fill me-2"></i>System Configuration</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">System Console Name</label>
+                            <input type="text" name="system.name" th:value="${systemNameValue}" class="form-control cyber-input" required>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center mt-md-4 mt-2">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="system.maintenance" value="true" id="maintenanceCheck" th:checked="${maintenanceValue}">
+                                <label class="form-check-label text-muted font-weight-bold" for="maintenanceCheck">Enable Maintenance Mode</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security settings -->
+                <div class="cyber-card p-4 mb-4">
+                    <h5 class="mb-4 text-info"><i class="bi bi-shield-lock-fill me-2"></i>Security & Session Policies</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small font-weight-bold">Max Failed Login Attempts</label>
+                            <input type="number" name="security.max_login_attempts" th:value="${maxAttemptsValue}" class="form-control cyber-input" min="1" max="20" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small font-weight-bold">Session Idle Timeout (Minutes)</label>
+                            <input type="number" name="security.session_timeout" th:value="${sessionTimeoutValue}" class="form-control cyber-input" min="5" max="1440" required>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center mt-md-4 mt-2">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="security.enable_2fa" value="true" id="enable2faCheck" th:checked="${enable2faValue}">
+                                <label class="form-check-label text-muted font-weight-bold" for="enable2faCheck">Enforce Multi-Factor Auth (MFA)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password settings -->
+                <div class="cyber-card p-4 mb-4">
+                    <h5 class="mb-4 text-info"><i class="bi bi-key-fill me-2"></i>User Password Criteria Policies</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">Minimum Password Character Length</label>
+                            <input type="number" name="password.min_length" th:value="${minPassLengthValue}" class="form-control cyber-input" min="6" max="30" required>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center mt-md-4 mt-2">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="password.require_special" value="true" id="requireSpecialCheck" th:checked="${requireSpecialValue}">
+                                <label class="form-check-label text-muted font-weight-bold" for="requireSpecialCheck">Require Special Characters & Numbers</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email server settings -->
+                <div class="cyber-card p-4 mb-4">
+                    <h5 class="mb-4 text-info"><i class="bi bi-envelope-at-fill me-2"></i>System Outgoing Alert Email (SMTP)</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">SMTP Relay Hostname</label>
+                            <input type="text" name="email.smtp_host" th:value="${smtpHostValue}" class="form-control cyber-input" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label text-muted small font-weight-bold">SMTP Port</label>
+                            <input type="number" name="email.smtp_port" th:value="${smtpPortValue}" class="form-control cyber-input" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small font-weight-bold">SMTP Username</label>
+                            <input type="text" name="email.smtp_user" th:value="${smtpUserValue}" class="form-control cyber-input" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup settings -->
+                <div class="cyber-card p-4 mb-4">
+                    <h5 class="mb-4 text-info"><i class="bi bi-file-earmark-zip-fill me-2"></i>System Threat Backups</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">Threat Database Backup Frequency</label>
+                            <select name="backup.frequency" class="form-select cyber-select" required>
+                                <option value="Hourly" th:selected="${backupFreqValue == 'Hourly'}">Hourly Incrementals</option>
+                                <option value="Daily" th:selected="${backupFreqValue == 'Daily'}">Daily Snapshot</option>
+                                <option value="Weekly" th:selected="${backupFreqValue == 'Weekly'}">Weekly Archives</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">Snapshot Destination Directory Path</label>
+                            <input type="text" name="backup.path" th:value="${backupPathValue}" class="form-control cyber-input" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form submission button -->
+                <div class="mb-5">
+                    <button type="submit" class="cyber-btn"><i class="bi bi-save2-fill me-2"></i>Save Settings Profiles</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# H2 Database
+data/
+
+# Application Logs
+logs/
+*.log

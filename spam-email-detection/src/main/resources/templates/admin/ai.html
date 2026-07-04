@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('AI Management')}">
+    <title>AI Management Settings</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'ai', 'AI Management')}">
+        <div th:fragment="content">
+            <!-- Alerts banner -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Stats Widgets -->
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">API Endpoint Status</div>
+                        <div class="fs-4 font-weight-bold mt-1 d-flex align-items-center justify-content-center gap-2" th:classappend="${apiStatus == 'ACTIVE' ? 'text-success' : 'text-danger'}">
+                            <span class="spinner-grow spinner-grow-sm" th:classappend="${apiStatus == 'ACTIVE' ? 'text-success' : 'text-danger'}" role="status"></span>
+                            <span th:text="${apiStatus == 'ACTIVE' ? 'CONNECTED' : 'MISSING KEY'}">ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">API Request volume</div>
+                        <div class="fs-4 font-weight-bold mt-1 text-primary" th:text="${requestCount}">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">Average Latency</div>
+                        <div class="fs-4 font-weight-bold mt-1 text-info" th:text="${averageResponseTime} + ' ms'">0 ms</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="cyber-card p-3">
+                        <div class="text-muted small font-weight-bold text-uppercase">AI API Credits</div>
+                        <div class="fs-4 font-weight-bold mt-1 text-warning" th:text="${remainingCredits}">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI settings configuration -->
+            <div class="cyber-card p-4">
+                <h5 class="mb-4 text-info"><i class="bi bi-cpu-fill me-2"></i>AI Processor Configuration</h5>
+                
+                <form method="post" action="/admin/ai/save">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">Primary Threat Intelligence Provider</label>
+                            <select name="provider" class="form-select cyber-select" required>
+                                <option value="Google Gemini" th:selected="${provider == 'Google Gemini'}">Google Gemini AI</option>
+                                <option value="Rule-Based" th:selected="${provider == 'Rule-Based'}">Rule-Based / Local Keyword Detection</option>
+                            </select>
+                            <span class="text-muted small d-block mt-2">Choose 'Rule-Based' to bypass Gemini API calls and execute local heuristic analysis.</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small font-weight-bold">Active LLM Model</label>
+                            <select name="modelName" class="form-select cyber-select" required>
+                                <option value="gemini-2.5-flash" th:selected="${modelName == 'gemini-2.5-flash'}">gemini-2.5-flash (Recommended, Fast & Cost-Effective)</option>
+                                <option value="gemini-2.5-pro" th:selected="${modelName == 'gemini-2.5-pro'}">gemini-2.5-pro (High intelligence threat analysis)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small font-weight-bold">Gemini API Key</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-key-fill"></i></span>
+                            <input type="password" name="apiKey" th:value="${apiKey}" class="form-control cyber-input" placeholder="Enter Google Gemini API Key from AI Studio...">
+                        </div>
+                        <span class="text-muted small d-block mt-2">Get a free key from <a href="https://aistudio.google.com/" target="_blank" class="text-info">Google AI Studio</a>. If blank, the system will use the default properties key.</span>
+                    </div>
+
+                    <button type="submit" class="cyber-btn"><i class="bi bi-save2-fill me-2"></i>Save AI Parameters</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('Dataset Management')}">
+    <title>Dataset Management</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'datasets', 'Dataset Management')}">
+        <div th:fragment="content">
+            <!-- Alert banners -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert soc-alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-left-color: #f44336;">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-danger"></i>
+                <span th:text="${error}">Error message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Upload and retrain widgets -->
+            <div class="row g-4 mb-4">
+                <!-- Upload form -->
+                <div class="col-lg-6">
+                    <div class="cyber-card p-4 h-100">
+                        <h5 class="mb-4 text-info"><i class="bi bi-cloud-upload-fill me-2"></i>Upload Security Dataset</h5>
+                        <p class="text-muted small">Upload CSV files containing spam/phishing classification data. File must have headers: <code>subject,content,result</code></p>
+                        
+                        <form method="post" action="/admin/datasets/upload" enctype="multipart/form-file" th:action="@{/admin/datasets/upload}">
+                            <!-- Note: spring standard multipart upload uses multipart/form-data -->
+                            <!-- Let's make sure it is multipart/form-data -->
+                        </form>
+                        <!-- Correct form tag -->
+                        <form method="post" action="/admin/datasets/upload" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small font-weight-bold">Select CSV File</label>
+                                <input type="file" name="file" class="form-control cyber-input" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="cyber-btn"><i class="bi bi-upload me-2"></i>Parse & Upload Dataset</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Retrain Trigger -->
+                <div class="col-lg-6">
+                    <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="mb-3 text-info"><i class="bi bi-cpu-fill me-2"></i>Heuristic AI Model Retraining</h5>
+                            <p class="text-muted small">Recompile active indicators and weights with newly uploaded datasets. Model accuracy metrics will recalibrate upon completion.</p>
+                        </div>
+                        <div>
+                            <!-- Progress bar -->
+                            <div id="trainingProgressContainer" class="mb-3 d-none">
+                                <div class="text-muted small mb-1 d-flex justify-content-between">
+                                    <span>Model Training in progress...</span>
+                                    <span id="trainingPercent">0%</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 10px;">
+                                    <div id="trainingProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <button id="btnRetrain" onclick="startTraining()" class="cyber-btn w-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);"><i class="bi bi-arrow-repeat me-2"></i>Trigger Neural Retraining</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Console Terminal Output -->
+            <div id="terminalContainer" class="cyber-card p-4 mb-4 d-none">
+                <h5 class="mb-3 text-success font-monospace"><i class="bi bi-terminal-fill me-2"></i>Training Output Stream</h5>
+                <div id="trainingTerminal" class="p-3 bg-black rounded font-monospace text-success border border-secondary" style="height: 220px; overflow-y: auto; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap;">
+                    Waiting for threat training initialization sequence...
+                </div>
+            </div>
+
+            <!-- Datasets Catalog Table -->
+            <div class="cyber-card p-4">
+                <h5 class="mb-4 text-info"><i class="bi bi-database-fill me-2"></i>Security Dataset Catalogs</h5>
+                <div class="table-responsive">
+                    <table class="table cyber-table m-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Filename</th>
+                                <th>Records Count</th>
+                                <th>Ratio (Spam/Safe)</th>
+                                <th>Size</th>
+                                <th>Uploaded Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="dataset : ${datasets}">
+                                <td th:text="${dataset.id}">1</td>
+                                <td class="font-weight-bold" th:text="${dataset.filename}">dataset.csv</td>
+                                <td th:text="${dataset.totalRecords}">0</td>
+                                <td>
+                                    <span class="text-danger" th:text="${dataset.spamRecords}">0</span> /
+                                    <span class="text-success" th:text="${dataset.safeRecords}">0</span>
+                                </td>
+                                <td th:text="${dataset.sizeBytes < 1024 ? dataset.sizeBytes + ' B' : dataset.sizeBytes < 1048576 ? String.format('%.1f KB', dataset.sizeBytes/1024.0) : String.format('%.1f MB', dataset.sizeBytes/1048576.0)}">0 KB</td>
+                                <td th:text="${#temporals.format(dataset.uploadedAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                                <td>
+                                    <form method="post" th:action="@{/admin/datasets/delete/{id}(id=${dataset.id})}" onsubmit="return confirm('Purge this dataset from local catalogs?');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(datasets)}">
+                                <td colspan="7" class="text-center text-muted py-4">No dataset files registered in the catalog yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- JavaScript training polling logic -->
+            <script th:inline="javascript">
+                let intervalId = null;
+
+                function startTraining() {
+                    document.getElementById('btnRetrain').disabled = true;
+                    document.getElementById('trainingProgressContainer').classList.remove('d-none');
+                    document.getElementById('terminalContainer').classList.remove('d-none');
+
+                    fetch('/admin/datasets/retrain', { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) {
+                                pollStatus();
+                                intervalId = setInterval(pollStatus, 700);
+                            } else {
+                                alert("Failed to start training session.");
+                                resetButtons();
+                            }
+                        })
+                        .catch(err => {
+                            alert("Connection error: " + err.message);
+                            resetButtons();
+                        });
+                }
+
+                function pollStatus() {
+                    fetch('/admin/datasets/retrain/status')
+                        .then(res => res.json())
+                        .then(data => {
+                            const progress = data.progress;
+                            const logs = data.logs;
+                            const active = data.active;
+
+                            // Update progress elements
+                            document.getElementById('trainingPercent').innerText = progress + '%';
+                            document.getElementById('trainingProgressBar').style.width = progress + '%';
+
+                            // Update Terminal
+                            const term = document.getElementById('trainingTerminal');
+                            term.innerText = logs.join('\n');
+                            term.scrollTop = term.scrollHeight;
+
+                            if (!active && progress === 100) {
+                                clearInterval(intervalId);
+                                document.getElementById('trainingProgressBar').classList.remove('progress-bar-striped', 'progress-bar-animated');
+                                document.getElementById('trainingProgressBar').classList.add('bg-success');
+                                alert("Heuristic Neural Retraining Sequence Completed Successfully!");
+                                resetButtons(true);
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Polling error: ", err);
+                        });
+                }
+
+                function resetButtons(keepFinished = false) {
+                    if (!keepFinished) {
+                        document.getElementById('btnRetrain').disabled = false;
+                        document.getElementById('trainingProgressContainer').classList.add('d-none');
+                        document.getElementById('terminalContainer').classList.add('d-none');
+                    } else {
+                        document.getElementById('btnRetrain').disabled = false;
+                        document.getElementById('btnRetrain').innerText = 'Retrain Completed (Trigger Again)';
+                    }
+                }
+            </script>
+        </div>
+    </div>
+</body>
+</html>

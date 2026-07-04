@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('System Monitoring')}">
+    <title>System Monitoring</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'monitoring', 'System Monitoring')}">
+        <div th:fragment="content">
+            <!-- Resource Usage Cards -->
+            <div class="row g-4 mb-4">
+                <!-- CPU Usage -->
+                <div class="col-md-4">
+                    <div class="cyber-card p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="text-muted font-weight-bold text-uppercase m-0">JVM CPU Load</h6>
+                            <span class="fs-4 text-info font-weight-bold" th:text="${cpuLoad} + '%'">0%</span>
+                        </div>
+                        <div class="progress bg-dark mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-info progress-bar-striped" role="progressbar" th:style="'width: ' + ${cpuLoad} + '%'"></div>
+                        </div>
+                        <span class="text-muted small">Real-time JVM core CPU cycle consumption percentage.</span>
+                    </div>
+                </div>
+
+                <!-- Memory Usage -->
+                <div class="col-md-4">
+                    <div class="cyber-card p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="text-muted font-weight-bold text-uppercase m-0">JVM RAM Allocations</h6>
+                            <span class="fs-4 text-primary font-weight-bold" th:text="${memoryPercentage} + '%'">0%</span>
+                        </div>
+                        <div class="progress bg-dark mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" th:style="'width: ' + ${memoryPercentage} + '%'"></div>
+                        </div>
+                        <div class="text-muted small d-flex justify-content-between">
+                            <span th:text="'Used: ' + ${usedMemory} + ' MB'">Used: 0 MB</span>
+                            <span th:text="'Total: ' + ${totalMemory} + ' MB'">Total: 0 MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage Usage -->
+                <div class="col-md-4">
+                    <div class="cyber-card p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="text-muted font-weight-bold text-uppercase m-0">Server Storage</h6>
+                            <span class="fs-4 text-warning font-weight-bold" th:text="${diskPercentage} + '%'">0%</span>
+                        </div>
+                        <div class="progress bg-dark mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" th:style="'width: ' + ${diskPercentage} + '%'"></div>
+                        </div>
+                        <div class="text-muted small d-flex justify-content-between">
+                            <span th:text="'Used: ' + ${usedDisk} + ' GB'">Used: 0 GB</span>
+                            <span th:text="'Total: ' + ${totalDisk} + ' GB'">Total: 0 GB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Status and Details -->
+            <div class="row g-4 mb-4">
+                <!-- Status List -->
+                <div class="col-lg-6">
+                    <div class="cyber-card p-4 h-100">
+                        <h5 class="mb-4 text-info"><i class="bi bi-heart-pulse-fill me-2"></i>Endpoint Diagnostics</h5>
+                        <ul class="list-group list-group-flush bg-transparent">
+                            <li class="list-group-item bg-transparent text-white border-secondary py-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="font-weight-bold">Local Database connection</div>
+                                    <span class="text-muted small" th:text="${dbStatus}">Status</span>
+                                </div>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success p-2">ONLINE</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-white border-secondary py-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="font-weight-bold">Gemini AI Gateway</div>
+                                    <span class="text-muted small" th:text="${apiStatus}">Status</span>
+                                </div>
+                                <span class="badge p-2" th:classappend="${apiStatus == 'INACTIVE' ? 'bg-danger bg-opacity-20 text-danger border border-danger' : 'bg-success bg-opacity-20 text-success border border-success'}">
+                                    <span th:text="${apiStatus == 'INACTIVE' ? 'STANDBY' : 'ONLINE'}">ONLINE</span>
+                                </span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-white border-0 py-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="font-weight-bold">Application Server Uptime</div>
+                                    <span class="text-muted small" th:text="${uptime}">Uptime</span>
+                                </div>
+                                <span class="badge bg-success bg-opacity-20 text-success border border-success p-2">ONLINE</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Details / Metadata -->
+                <div class="col-lg-6">
+                    <div class="cyber-card p-4 h-100">
+                        <h5 class="mb-4 text-info"><i class="bi bi-info-circle-fill me-2"></i>Runtime Environment Metadata</h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Java Version</span>
+                                <span class="font-weight-bold">Java 21 (JDK 21.0.1)</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Core Framework</span>
+                                <span class="font-weight-bold">Spring Boot 3.2.0</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">ORM Layer</span>
+                                <span class="font-weight-bold">Hibernate / JPA</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">System Platform</span>
+                                <span class="font-weight-bold">Windows x64 OS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Logs Terminal Output -->
+            <div class="cyber-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="text-success font-monospace m-0"><i class="bi bi-terminal-fill me-2"></i>Live logs tail console (logs/app.log)</h5>
+                    <span class="status-badge badge-threat-low" style="font-size: 0.7rem;"><i class="bi bi-dot"></i>Live Feed</span>
+                </div>
+                <div id="logTerminal" class="p-3 bg-black rounded font-monospace text-success border border-secondary" style="height: 280px; overflow-y: auto; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap;">
+                    Connecting to system log pipeline...
+                </div>
+            </div>
+
+            <!-- JavaScript polling logs logic -->
+            <script>
+                function fetchLogs() {
+                    fetch('/admin/monitoring/logs')
+                        .then(res => res.json())
+                        .then(lines => {
+                            const term = document.getElementById('logTerminal');
+                            if (lines.length === 0) {
+                                term.innerText = "Log pipeline connected. Awaiting telemetry log signals...";
+                            } else {
+                                term.innerText = lines.join('\n');
+                                term.scrollTop = term.scrollHeight; // Auto-scroll down
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Log fetch failure: ", err);
+                        });
+                }
+
+                // Initial load
+                fetchLogs();
+                // Poll logs every 1500 ms
+                setInterval(fetchLogs, 1500);
+            </script>
+        </div>
+    </div>
+</body>
+</html>

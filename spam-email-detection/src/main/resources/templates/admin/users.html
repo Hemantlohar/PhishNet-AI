@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/layout :: socHeader('User Management')}">
+    <title>User Management</title>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::content}, 'users', 'User Management')}">
+        <div th:fragment="content">
+            <!-- Alert banners -->
+            <div th:if="${success}" class="alert soc-alert alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-shield-check-fill me-2 fs-5 text-success"></i>
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert soc-alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-left-color: #f44336;">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5 text-danger"></i>
+                <span th:text="${error}">Error message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="cyber-card p-4 mb-4">
+                <form method="get" action="/admin/users" class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small font-weight-bold">Search Accounts</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" th:value="${search}" class="form-control cyber-input" placeholder="Search by username or email...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small font-weight-bold">Filter Role</label>
+                        <select name="role" class="form-select cyber-select">
+                            <option value="">All Roles</option>
+                            <option value="ROLE_ADMIN" th:selected="${selectedRole == 'ROLE_ADMIN'}">Administrator</option>
+                            <option value="ROLE_USER" th:selected="${selectedRole == 'ROLE_USER'}">Regular User</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small font-weight-bold">Filter Status</label>
+                        <select name="active" class="form-select cyber-select">
+                            <option value="">All Statuses</option>
+                            <option value="true" th:selected="${selectedActive == true}">Active</option>
+                            <option value="false" th:selected="${selectedActive == false}">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="cyber-btn w-100"><i class="bi bi-funnel-fill me-2"></i>Filter</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Users Table -->
+            <div class="cyber-card p-4">
+                <h5 class="mb-4 text-info"><i class="bi bi-people-fill me-2"></i>User Directories & Threats Logs</h5>
+                <div class="table-responsive">
+                    <table class="table cyber-table m-0">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Account Status</th>
+                                <th>Submissions (Spam/Phish/Safe)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users}">
+                                <td th:text="${user.id}">1</td>
+                                <td>
+                                    <span class="font-weight-bold" th:text="${user.username}">username</span>
+                                </td>
+                                <td th:text="${user.email}">user@example.com</td>
+                                <td>
+                                    <span class="badge" th:classappend="${user.role == 'ROLE_ADMIN' ? 'bg-primary' : 'bg-secondary'}" th:text="${user.role == 'ROLE_ADMIN' ? 'Admin' : 'User'}">USER</span>
+                                </td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${user.active ? 'badge-threat-low' : 'badge-threat-high'}">
+                                        <i class="bi" th:classappend="${user.active ? 'bi-patch-check-fill' : 'bi-slash-circle-fill'}"></i>
+                                        <span th:text="${user.active ? 'Active' : 'Suspended'}">ACTIVE</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:with="stats=${userStats.get(user.id)}">
+                                        <span th:text="${stats.get('total')}">0</span> Total
+                                        (<span class="text-danger" th:text="${stats.get('spam')}">0</span>S /
+                                        <span class="text-warning" th:text="${stats.get('phishing')}">0</span>P /
+                                        <span class="text-success" th:text="${stats.get('safe')}">0</span>L)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <!-- Edit Modal Trigger -->
+                                        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" th:data-bs-target="'#editModal-' + ${user.id}"><i class="bi bi-pencil-square"></i> Edit</button>
+                                        <!-- Reset Password Modal Trigger -->
+                                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" th:data-bs-target="'#passModal-' + ${user.id}"><i class="bi bi-key-fill"></i> Password</button>
+                                        <!-- Delete Trigger -->
+                                        <form method="post" action="/admin/users/delete" th:if="${#authentication.name != user.username}" onsubmit="return confirm('WARNING: Are you absolutely sure you want to permanently delete this user and all associated threat records?');">
+                                            <input type="hidden" name="id" th:value="${user.id}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Purge</button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Edit User Modal -->
+                                    <div class="modal fade" th:id="'editModal-' + ${user.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                                                <div class="modal-header border-light">
+                                                    <h5 class="modal-title text-info"><i class="bi bi-pencil-square me-2"></i>Edit Account Properties</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form method="post" action="/admin/users/update">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" th:value="${user.id}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label text-muted small font-weight-bold">Username</label>
+                                                            <input type="text" name="username" th:value="${user.username}" class="form-control cyber-input" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label text-muted small font-weight-bold">Email Address</label>
+                                                            <input type="email" name="email" th:value="${user.email}" class="form-control cyber-input" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label text-muted small font-weight-bold">Account Access Role</label>
+                                                            <select name="role" class="form-select cyber-select">
+                                                                <option value="ROLE_USER" th:selected="${user.role == 'ROLE_USER'}">Regular User</option>
+                                                                <option value="ROLE_ADMIN" th:selected="${user.role == 'ROLE_ADMIN'}">Console Administrator</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-check form-switch mb-3" th:if="${#authentication.name != user.username}">
+                                                            <input class="form-check-input" type="checkbox" name="active" value="true" th:id="'activeCheck-' + ${user.id}" th:checked="${user.active}">
+                                                            <label class="form-check-label text-muted" th:for="'activeCheck-' + ${user.id}">Enable login access for this account</label>
+                                                        </div>
+                                                        <!-- Prevent self lock out -->
+                                                        <input type="hidden" name="active" value="true" th:if="${#authentication.name == user.username}">
+                                                    </div>
+                                                    <div class="modal-footer border-secondary">
+                                                        <button type="button" class="cyber-btn cyber-btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="cyber-btn">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reset Password Modal -->
+                                    <div class="modal fade" th:id="'passModal-' + ${user.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                                                <div class="modal-header border-light">
+                                                    <h5 class="modal-title text-warning"><i class="bi bi-key-fill me-2"></i>Force Password Reset</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form method="post" action="/admin/users/reset-password">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" th:value="${user.id}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label text-muted small font-weight-bold">New Security Password</label>
+                                                            <input type="password" name="newPassword" class="form-control cyber-input" placeholder="Min 6 characters..." required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-secondary">
+                                                        <button type="button" class="cyber-btn cyber-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="cyber-btn" style="background: linear-gradient(135deg, #f5b041 0%, #f39c12 100%); box-shadow: 0 2px 10px rgba(243, 156, 18, 0.2)">Reset Password</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(users)}">
+                                <td colspan="7" class="text-center text-muted py-4">No users matching search filters found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

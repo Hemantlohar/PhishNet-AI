@@ -26,10 +26,24 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Environment
+# Environment / Secrets
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+*.json
+
+# Python / Jupyter
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+myenv/
+.ipynb_checkpoints/
 
 # Logs
 logs/

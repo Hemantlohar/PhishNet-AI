@@ -1,13 +1,32 @@
-# IDE
+# Secrets
+.env
+*.pem
+*.key
+*.json  # narrow this if you need some json tracked; at least ignore credential key paths
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+myenv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs / OS / IDE
+*.log
+.DS_Store
 .vscode/
 .idea/
 *.swp
 *.swo
-.DS_Store
 
 # H2 Database
 data/
 
 # Application Logs
 logs/
-*.log
